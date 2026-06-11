@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKY Admin — Painel de Controle</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E50914;--red-dark:#B20710;--red-glow:rgba(229,9,20,.25);
+  --bg:#0a0a0a;--surface:#111;--surface2:#161616;--surface3:#1c1c1c;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#fff;--muted:#888;--dim:#444;
+  --green:#46d369;--amber:#f5a623;--blue:#4a9eff;
+  --nav-w:220px;
+}
+html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+input,button,textarea,select{font-family:'Barlow',sans-serif}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px;border-radius:3px}
+
+/* ══ LOGIN ══ */
+#page-login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:9999;flex-direction:column;gap:32px}
+#page-login.hidden{display:none}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:5px;color:var(--red)}
+.login-logo span{color:#fff}
+.login-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:36px 32px;animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.login-card h2{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:24px}
+.lfield{margin-bottom:14px}
+.lfield label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.lfield input{width:100%;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:4px;color:#fff;font-size:.95rem;outline:none;transition:border-color .2s}
+.lfield input:focus{border-color:rgba(255,255,255,.35)}
+.btn-login-submit{width:100%;margin-top:8px;padding:13px;background:var(--red);border:none;border-radius:4px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.btn-login-submit:hover{background:var(--red-dark)}
+.login-err{font-size:.78rem;color:#ff6b6b;margin-top:10px;text-align:center;min-height:18px}
+.login-badge{font-size:.65rem;color:var(--dim);text-align:center;letter-spacing:.06em;text-transform:uppercase}
+
+/* ══ LAYOUT ══ */
+#app{display:none;height:100vh;overflow:hidden}
+#app.visible{display:flex}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:var(--nav-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow:hidden}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.sb-logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:4px;color:var(--red);line-height:1}
+.sb-logo-text span{color:#fff}
+.sb-label{font-size:.58rem;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;font-weight:700;margin-top:2px}
+.sb-nav{flex:1;overflow-y:auto;padding:12px 0}
+.sb-section{padding:16px 16px 6px;font-size:.6rem;font-weight:800;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:11px;padding:10px 16px;cursor:pointer;border-radius:0;transition:background .15s,color .15s;color:var(--muted);font-size:.85rem;font-weight:500;border:none;background:none;width:100%;text-align:left;position:relative}
+.sb-item:hover{background:rgba(255,255,255,.04);color:#fff}
+.sb-item.active{background:rgba(229,9,20,.1);color:#fff}
+.sb-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);border-radius:0 2px 2px 0}
+.sb-item svg{flex-shrink:0;opacity:.6}
+.sb-item.active svg{opacity:1}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.58rem;font-weight:800;padding:2px 6px;border-radius:10px;letter-spacing:.04em}
+.sb-bottom{padding:14px 16px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:10px}
+.sb-avatar{width:30px;height:30px;border-radius:4px;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;flex-shrink:0}
+.sb-user-info{flex:1;overflow:hidden}
+.sb-user-name{font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-role{font-size:.62rem;color:var(--muted)}
+.sb-logout{background:none;border:none;color:var(--dim);cursor:pointer;padding:4px;border-radius:4px;transition:color .2s;display:flex}
+.sb-logout:hover{color:#fff}
+
+/* ══ MAIN ══ */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg)}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.topbar-sep{color:var(--dim)}
+.topbar-sub{font-size:.8rem;color:var(--muted)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-txt{font-size:.7rem;color:var(--muted)}
+
+.content{padding:24px;flex:1}
+
+/* ══ PANELS ══ */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ══ STATS ROW ══ */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--red))}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:1px;color:#fff;line-height:1;margin-bottom:2px}
+.stat-l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.stat-delta{font-size:.68rem;color:var(--green);margin-top:4px}
+
+/* ══ SECTION HEADER ══ */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-hd h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:4px;border:none;cursor:pointer;font-family:'Barlow',sans-serif;font-weight:600;font-size:.8rem;transition:all .2s;letter-spacing:.02em}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:var(--red-dark)}
+.btn-secondary{background:rgba(255,255,255,.07);color:var(--muted);border:1px solid var(--border2)}
+.btn-secondary:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-ghost{background:none;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.btn-danger{background:rgba(229,9,20,.15);color:var(--red);border:1px solid rgba(229,9,20,.3)}
+.btn-danger:hover{background:rgba(229,9,20,.25)}
+.btn-sm{padding:5px 11px;font-size:.72rem}
+.btn-xs{padding:3px 8px;font-size:.67rem;border-radius:3px}
+
+/* ══ TABLE ══ */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--surface2)}
+th{padding:10px 14px;text-align:left;font-size:.65rem;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 14px;font-size:.83rem;color:#e0e0e0;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-mono{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:3px;font-size:.65rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.badge-green{background:rgba(70,211,105,.12);color:var(--green);border:1px solid rgba(70,211,105,.25)}
+.badge-red{background:rgba(229,9,20,.12);color:#ff6b6b;border:1px solid rgba(229,9,20,.25)}
+.badge-amber{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.badge-blue{background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.25)}
+.badge-dim{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)}
+.td-actions{display:flex;gap:6px;align-items:center}
+.avatar-sm{width:28px;height:28px;border-radius:4px;background:var(--red);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
+
+/* ══ SEARCH / FILTER BAR ══ */
+.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search-inp{padding:9px 13px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:4px;color:#fff;font-size:.85rem;outline:none;width:240px;transition:border-color .2s}
+.search-inp:focus{border-color:rgba(255,255,255,.3)}
+.search-inp::placeholder{color:var(--dim)}
+.filter-sel{padding:9px 13px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:4px;color:#fff;font-size:.82rem;outline:none;cursor:pointer;appearance:none;padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.filter-sel option{background:#1c1c1c;color:#fff}
+
+/* ══ MODAL ══ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:8px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease both}
+.modal-hd{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-hd h3{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:4px;display:flex;transition:color .2s}
+.modal-close:hover{color:#fff}
+.modal-body{padding:22px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:4px;color:#fff;font-size:.9rem;outline:none;transition:border-color .2s;font-family:'Barlow',sans-serif}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(255,255,255,.35)}
+.field select option{background:#1c1c1c}
+.field textarea{resize:vertical;min-height:80px}
+.field-hint{font-size:.7rem;color:var(--dim);margin-top:5px}
+.modal-ft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* ══ TOGGLE ══ */
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:38px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:20px;cursor:pointer;transition:background .2s}
+.toggle-slider::after{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle input:checked ~ .toggle-slider{background:var(--green)}
+.toggle input:checked ~ .toggle-slider::after{transform:translateX(18px)}
+.toggle-lbl{font-size:.82rem;color:var(--muted)}
+
+/* ══ CARD GRID ══ */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.content-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;position:relative;cursor:pointer;transition:border-color .2s}
+.content-card:hover{border-color:var(--border2)}
+.cc-thumb{width:100%;aspect-ratio:2/3;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative}
+.cc-thumb img{width:100%;height:100%;object-fit:cover}
+.cc-blocked{position:absolute;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center}
+.cc-blocked-icon{font-size:1.5rem}
+.cc-info{padding:10px}
+.cc-title{font-size:.78rem;font-weight:700;color:#e5e5e5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.cc-meta{font-size:.65rem;color:var(--muted)}
+.cc-toggle{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.75);border-radius:4px;padding:3px;backdrop-filter:blur(4px)}
+
+/* ══ EMPTY STATE ══ */
+.empty{text-align:center;padding:48px 20px;color:var(--dim)}
+.empty-icon{font-size:2.5rem;margin-bottom:12px}
+.empty p{font-size:.85rem}
+
+/* ══ TOAST ══ */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:rgba(20,20,20,.97);border:1px solid var(--border2);border-radius:6px;padding:11px 22px;font-size:.8rem;color:#fff;z-index:9999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.7)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ══ FORM ROW ══ */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ══ SECTION DIVIDER ══ */
+.sdiv{height:1px;background:var(--border);margin:24px 0}
+
+/* ══ CREDENTIAL CARD ══ */
+.cred-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px 20px;margin-bottom:12px}
+.cred-card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cred-card-title{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+
+/* ══ ACTIVITY LOG ══ */
+.log-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.log-dot-green{background:var(--green)}
+.log-dot-red{background:var(--red)}
+.log-dot-amber{background:var(--amber)}
+.log-dot-blue{background:var(--blue)}
+.log-text{font-size:.8rem;color:#ccc;line-height:1.5}
+.log-time{font-size:.68rem;color:var(--dim);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-100%;top:0;bottom:0;z-index:300;transition:left .3s}
+  .sidebar.open{left:0}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .form-row{grid-template-columns:1fr}
+  .mobile-menu{display:flex!important}
+}
+.mobile-menu{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:6px}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="page-login">
+  <div class="login-logo">S<span>KY</span> <span style="font-size:1rem;color:var(--muted);letter-spacing:2px">ADMIN</span></div>
+  <div class="login-card">
+    <h2>Acesso Restrito</h2>
+    <div class="lfield">
+      <label>E-mail</label>
+      <input type="email" id="adm-email" placeholder="admin@sky.com" autocomplete="username">
+    </div>
+    <div class="lfield">
+      <label>Senha</label>
+      <input type="password" id="adm-pwd" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login-submit" onclick="adminLogin()">Entrar no Painel</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+  <div class="login-badge">SKY Admin · Área Restrita · v2.0</div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-text">S<span>KY</span></div>
+      <div class="sb-label">Painel Admin</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Principal</div>
+      <button class="sb-item active" onclick="showPanel('dashboard')" id="nav-dashboard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sb-item" onclick="showPanel('usuarios')" id="nav-usuarios">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Usuários
+        <span class="sb-badge" id="badge-users">0</span>
+      </button>
+      <div class="sb-section">Catálogo</div>
+      <button class="sb-item" onclick="showPanel('filmes')" id="nav-filmes">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M17 7h5M2 17h5M17 17h5"/></svg>
+        Filmes
+      </button>
+      <button class="sb-item" onclick="showPanel('series')" id="nav-series">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Séries
+      </button>
+      <div class="sb-section">Sistema</div>
+      <button class="sb-item" onclick="showPanel('credenciais')" id="nav-credenciais">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Credenciais
+      </button>
+      <button class="sb-item" onclick="showPanel('logs')" id="nav-logs">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Logs
+      </button>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sb-avatar">A</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sb-name">Admin</div>
+          <div class="sb-user-role">Administrador</div>
+        </div>
+        <button class="sb-logout" onclick="adminLogout()" title="Sair">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="mobile-menu" onclick="toggleSidebar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <span class="topbar-sep">·</span>
+      <span class="topbar-sub" id="topbar-sub">Visão geral</span>
+      <div class="topbar-right">
+        <div class="status-dot"></div>
+        <span class="status-txt">Sistema online</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="stats-row">
+          <div class="stat-card" style="--accent:var(--red)">
+            <div class="stat-n" id="stat-users">0</div>
+            <div class="stat-l">Usuários</div>
+            <div class="stat-delta" id="stat-users-active">0 ativos</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--blue)">
+            <div class="stat-n" id="stat-movies">0</div>
+            <div class="stat-l">Filmes liberados</div>
+            <div class="stat-delta" id="stat-movies-blocked">0 bloqueados</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--amber)">
+            <div class="stat-n" id="stat-series">0</div>
+            <div class="stat-l">Séries liberadas</div>
+            <div class="stat-delta" id="stat-series-blocked">0 bloqueadas</div>
+          </div>
+          <div class="stat-card" style="--accent:var(--green)">
+            <div class="stat-n" id="stat-total">0</div>
+            <div class="stat-l">Total catálogo</div>
+            <div class="stat-delta">Filmes + Séries</div>
+          </div>
+        </div>
+
+        <div class="sec-hd"><h3>Atividade Recente</h3></div>
+        <div class="table-wrap">
+          <div style="padding:16px 20px" id="dash-log-list"></div>
+        </div>
+
+        <div class="sec-hd"><h3>Acesso Rápido</h3></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="openAddUser()">+ Novo Usuário</button>
+          <button class="btn btn-secondary" onclick="showPanel('filmes')">Gerenciar Filmes</button>
+          <button class="btn btn-secondary" onclick="showPanel('series')">Gerenciar Séries</button>
+          <button class="btn btn-ghost" onclick="showPanel('credenciais')">Alterar Credenciais Admin</button>
+        </div>
+      </div>
+
+      <!-- ══ USUÁRIOS ══ -->
+      <div class="panel" id="panel-usuarios">
+        <div class="filter-bar">
+          <input class="search-inp" type="search" placeholder="Buscar usuário..." id="user-search" oninput="filterUsers()">
+          <select class="filter-sel" id="user-filter-status" onchange="filterUsers()">
+            <option value="">Todos os status</option>
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+          <button class="btn btn-primary" style="margin-left:auto" onclick="openAddUser()">+ Novo Usuário</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>E-mail</th>
+                <th>Senha</th>
+                <th>Status</th>
+                <th>Criado</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+        <div id="users-empty" class="empty" style="display:none">
+          <div class="empty-icon">👥</div>
+          <p>Nenhum usuário encontrado.</p>
+        </div>
+      </div>
+
+      <!-- ══ FILMES ══ -->
+      <div class="panel" id="panel-filmes">
+        <div class="filter-bar">
+          <input class="search-inp" type="search" placeholder="Buscar filme..." id="movie-search" oninput="filterContent('movies')">
+          <select class="filter-sel" id="movie-filter" onchange="filterContent('movies')">
+            <option value="">Todos</option>
+            <option value="liberado">Liberados</option>
+            <option value="bloqueado">Bloqueados</option>
+          </select>
+          <button class="btn btn-secondary" onclick="toggleAllContent('movies', true)">Liberar Todos</button>
+          <button class="btn btn-danger" onclick="toggleAllContent('movies', false)">Bloquear Todos</button>
+        </div>
+        <div class="card-grid" id="movies-grid"></div>
+        <div id="movies-empty" class="empty" style="display:none">
+          <div class="empty-icon">🎬</div>
+          <p>Nenhum filme encontrado. Os filmes carregam do TMDB automaticamente.</p>
+        </div>
+      </div>
+
+      <!-- ══ SÉRIES ══ -->
+      <div class="panel" id="panel-series">
+        <div class="filter-bar">
+          <input class="search-inp" type="search" placeholder="Buscar série..." id="series-search" oninput="filterContent('series')">
+          <select class="filter-sel" id="series-filter" onchange="filterContent('series')">
+            <option value="">Todas</option>
+            <option value="liberado">Liberadas</option>
+            <option value="bloqueado">Bloqueadas</option>
+          </select>
+          <button class="btn btn-secondary" onclick="toggleAllContent('series', true)">Liberar Todas</button>
+          <button class="btn btn-danger" onclick="toggleAllContent('series', false)">Bloquear Todas</button>
+        </div>
+        <div class="card-grid" id="series-grid"></div>
+        <div id="series-empty" class="empty" style="display:none">
+          <div class="empty-icon">📺</div>
+          <p>Nenhuma série encontrada. As séries carregam do TMDB automaticamente.</p>
+        </div>
+      </div>
+
+      <!-- ══ CREDENCIAIS ══ -->
+      <div class="panel" id="panel-credenciais">
+        <div class="cred-card">
+          <div class="cred-card-hd">
+            <div class="cred-card-title">🔐 Credenciais do Admin (Painel)</div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>E-mail Admin</label>
+              <input type="email" id="cred-admin-email" placeholder="admin@sky.com">
+            </div>
+            <div class="field">
+              <label>Nova Senha Admin</label>
+              <input type="password" id="cred-admin-pwd" placeholder="Nova senha">
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirmar Senha</label>
+            <input type="password" id="cred-admin-pwd2" placeholder="Repita a nova senha">
+          </div>
+          <button class="btn btn-primary" onclick="saveAdminCredentials()">Salvar Credenciais Admin</button>
+        </div>
+
+        <div class="cred-card">
+          <div class="cred-card-hd">
+            <div class="cred-card-title">📱 Credencial Padrão do App (index.html)</div>
+          </div>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px;line-height:1.6">
+            Estas são as credenciais usadas no app principal (index.html). Altere aqui e copie o código gerado para o arquivo.
+          </p>
+          <div class="form-row">
+            <div class="field">
+              <label>E-mail do App</label>
+              <input type="email" id="cred-app-email" placeholder="usuario@email.com">
+            </div>
+            <div class="field">
+              <label>Senha do App</label>
+              <input type="text" id="cred-app-pwd" placeholder="senha123">
+            </div>
+          </div>
+          <button class="btn btn-secondary" onclick="generateAppCode()">Gerar Código</button>
+          <div id="gen-code-out" style="margin-top:14px;display:none">
+            <label style="font-size:.7rem;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px">Cole isto no index.html (linhas 13–14):</label>
+            <pre id="gen-code" style="background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.76rem;color:#46d369;overflow-x:auto;white-space:pre-wrap"></pre>
+            <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="copyGenCode()">Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ LOGS ══ -->
+      <div class="panel" id="panel-logs">
+        <div class="sec-hd">
+          <h3>Log de Atividades</h3>
+          <button class="btn btn-danger btn-sm" onclick="clearLogs()">Limpar Logs</button>
+        </div>
+        <div class="table-wrap">
+          <div style="padding:4px 0" id="full-log-list"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ MODAL USUÁRIO ══ -->
+<div class="overlay" id="modal-user">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3 id="modal-user-title">Novo Usuário</h3>
+      <button class="modal-close" onclick="closeModal('modal-user')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="user-edit-id">
+      <div class="form-row">
+        <div class="field">
+          <label>Nome</label>
+          <input type="text" id="user-name" placeholder="João Silva">
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="user-status">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>E-mail de Login</label>
+        <input type="email" id="user-email" placeholder="usuario@email.com">
+        <div class="field-hint">Este e-mail será usado para fazer login no app.</div>
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="text" id="user-pwd" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="field">
+        <label>Observação (opcional)</label>
+        <textarea id="user-note" placeholder="Ex: Plano Premium, familiar, etc."></textarea>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CONFIRMAR ══ -->
+<div class="overlay" id="modal-confirm">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-hd">
+      <h3 id="confirm-title">Confirmar</h3>
+      <button class="modal-close" onclick="closeModal('modal-confirm')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="font-size:.88rem;color:var(--muted);line-height:1.6"></p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════ */
+const ADMIN_KEY   = 'sky_admin_creds';
+const USERS_KEY   = 'sky_admin_users';
+const BLOCKED_KEY = 'sky_admin_blocked';
+const LOGS_KEY    = 'sky_admin_logs';
+const CATALOG_KEY = 'sky_admin_catalog';
+
+const TMDB_KEY  = '6e531b0186d44cd3e20ad530b5d76c8a';
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const IMG_BASE  = 'https://image.tmdb.org/t/p/w342';
+
+let adminCreds = { email:'admin@sky.com', password:'admin2025' };
+let users      = [];
+let blocked    = { movies:{}, series:{} };
+let logs       = [];
+let catalog    = { movies:[], series:[] };
+
+const $ = id => document.getElementById(id);
+
+/* ══ PERSIST ══ */
+function save() {
+  try {
+    localStorage.setItem(ADMIN_KEY,   JSON.stringify(adminCreds));
+    localStorage.setItem(USERS_KEY,   JSON.stringify(users));
+    localStorage.setItem(BLOCKED_KEY, JSON.stringify(blocked));
+    localStorage.setItem(LOGS_KEY,    JSON.stringify(logs.slice(0,200)));
+    localStorage.setItem(CATALOG_KEY, JSON.stringify(catalog));
+  } catch(e) { console.warn('save error', e); }
+}
+
+function load() {
+  try {
+    const ac = localStorage.getItem(ADMIN_KEY);
+    if (ac) adminCreds = JSON.parse(ac);
+    const u = localStorage.getItem(USERS_KEY);
+    if (u) users = JSON.parse(u);
+    const b = localStorage.getItem(BLOCKED_KEY);
+    if (b) blocked = JSON.parse(b);
+    const l = localStorage.getItem(LOGS_KEY);
+    if (l) logs = JSON.parse(l);
+    const c = localStorage.getItem(CATALOG_KEY);
+    if (c) catalog = JSON.parse(c);
+  } catch(e) { console.warn('load error', e); }
+}
+
+/* ══ LOG ══ */
+function addLog(type, msg) {
+  logs.unshift({ type, msg, time: new Date().toLocaleString('pt-BR') });
+  if (logs.length > 200) logs.pop();
+  save();
+}
+
+/* ══ TOAST ══ */
+let toastTimer;
+function toast(msg, color='#fff') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.color = color;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ══════════════════════════════
+   AUTH ADMIN
+══════════════════════════════ */
+function adminLogin() {
+  const email = $('adm-email').value.trim();
+  const pwd   = $('adm-pwd').value;
+  $('login-err').textContent = '';
+  if (!email || !pwd) { $('login-err').textContent = 'Preencha todos os campos.'; return; }
+  if (email.toLowerCase() !== adminCreds.email.toLowerCase() || pwd !== adminCreds.password) {
+    $('login-err').textContent = 'E-mail ou senha incorretos.';
+    return;
+  }
+  $('page-login').classList.add('hidden');
+  $('app').classList.add('visible');
+  $('sb-name').textContent = email.split('@')[0];
+  $('sb-avatar').textContent = email.charAt(0).toUpperCase();
+  load();
+  initApp();
+  addLog('green', `Login admin: ${email}`);
+}
+
+$('adm-pwd').addEventListener('keydown', e => { if(e.key==='Enter') adminLogin(); });
+
+function adminLogout() {
+  $('app').classList.remove('visible');
+  $('page-login').classList.remove('hidden');
+  $('adm-email').value = '';
+  $('adm-pwd').value = '';
+  $('login-err').textContent = '';
+}
+
+/* ══════════════════════════════
+   NAVIGATION
+══════════════════════════════ */
+const panelNames = {
+  dashboard:'Dashboard', usuarios:'Usuários',
+  filmes:'Filmes', series:'Séries',
+  credenciais:'Credenciais', logs:'Logs'
+};
+const panelSubs = {
+  dashboard:'Visão geral', usuarios:'Gerenciar acessos',
+  filmes:'Controle de catálogo', series:'Controle de catálogo',
+  credenciais:'Segurança e acesso', logs:'Histórico de atividade'
+};
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  const panel = $('panel-'+name);
+  if (panel) panel.classList.add('active');
+  const nav = $('nav-'+name);
+  if (nav) nav.classList.add('active');
+  $('topbar-title').textContent = panelNames[name] || name;
+  $('topbar-sub').textContent   = panelSubs[name] || '';
+  if (name === 'logs') renderLogs();
+  if (name === 'filmes') renderContent('movies');
+  if (name === 'series') renderContent('series');
+  if (name === 'usuarios') renderUsers();
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'credenciais') loadCredFields();
+  // mobile close
+  $('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  $('sidebar').classList.toggle('open');
+}
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+async function initApp() {
+  updateDashboard();
+  renderUsers();
+  await fetchCatalog();
+  updateDashboard();
+}
+
+/* Fallback embutido — usado quando não há catálogo salvo */
+const FALLBACK_MOVIES = [
+  {id:950387,title:'A Minecraft Movie',poster_path:'/iPPTGh4Xtj2pWxAJMWnhJSuMT5.jpg',release_date:'2025-04-04',vote_average:6.6,overview:'Quatro desajustados lutam para sobreviver no mundo de Minecraft.'},
+  {id:1197306,title:'A Quiet Place: Dia Um',poster_path:'/hukkTsHRiORHCdqTpDsM1nFpTa6.jpg',release_date:'2024-06-28',vote_average:6.9,overview:'A origem do apocalipse silencioso visto pelos olhos de uma sobrevivente em Nova York.'},
+  {id:1022789,title:'Divertida Mente 2',poster_path:'/x2vLRMC48a8D35oMnF6UMNtUQoN.jpg',release_date:'2024-06-14',vote_average:7.6,overview:'Riley entra na adolescência e novas emoções chegam para bagunçar tudo.'},
+  {id:945961,title:'Alien: Romulus',poster_path:'/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg',release_date:'2024-08-14',vote_average:7.3,overview:'Jovens colonizadores enfrentam a criatura mais aterrorizante do universo.'},
+  {id:693134,title:'Duna: Parte 2',poster_path:'/czembW0Rk1Ke7lCJGahbOhdCuhV.jpg',release_date:'2024-03-01',vote_average:8.3,overview:'Paul Atreides une forças com os Fremen contra os inimigos de sua família.'},
+  {id:519182,title:'Despicable Me 4',poster_path:'/wWba3TkJ0LqcEk5WMo2gLX5VzVb.jpg',release_date:'2024-07-03',vote_average:7.0,overview:'Gru enfrenta um novo e perigoso vilão enquanto tenta equilibrar a vida em família.'},
+  {id:762441,title:'Um Lugar Silencioso: Dia Um',poster_path:'/hukkTsHRiORHCdqTpDsM1nFpTa6.jpg',release_date:'2024-06-28',vote_average:6.8,overview:'A origem silenciosa do fim do mundo.'},
+  {id:1011985,title:'Kung Fu Panda 4',poster_path:'/kDp1vUBnMpe8ak4rjgl3cLELqjU.jpg',release_date:'2024-03-08',vote_average:6.8,overview:'Po deve encontrar um sucessor enquanto enfrenta uma nova vilã.'},
+  {id:746036,title:'The Fall Guy',poster_path:'/tSz1qsmSJon0rqjHBxXZmrotuse.jpg',release_date:'2024-05-01',vote_average:7.0,overview:'Um dublê retorna para salvar a produção de um filme — e talvez seu coração.'},
+  {id:573435,title:'Bad Boys: Ride or Die',poster_path:'/oGythE98MYleE6mZlMs9UVnAv9b.jpg',release_date:'2024-06-05',vote_average:7.1,overview:'Mike e Marcus fogem da lei enquanto tentam limpar o nome de um herói.'},
+  {id:823464,title:'Godzilla e Kong: O Novo Império',poster_path:'/z1p34vh7dEOnLDmyCrlUVLuoDzd.jpg',release_date:'2024-03-29',vote_average:7.0,overview:'Os dois titãs unem forças contra uma ameaça oculta no interior da Terra.'},
+  {id:614933,title:'Atlas',poster_path:'/bcM2Tl5HtO4H5DWHBPKrfFiJo3G.jpg',release_date:'2024-05-24',vote_average:6.1,overview:'Uma analista de dados desconfiante de IA precisa confiar numa para salvar a humanidade.'},
+  {id:1064213,title:'Twisters',poster_path:'/pjnD08FlMAIXsfOLKQbvmO0f0MD.jpg',release_date:'2024-07-17',vote_average:7.0,overview:'Dois grupos rivais de caçadores de tornados entram em rota de colisão.'},
+  {id:573452,title:'Deadpool & Wolverine',poster_path:'/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg',release_date:'2024-07-24',vote_average:7.7,overview:'Deadpool recruta Wolverine para uma missão que pode mudar o multiverso.'},
+  {id:1035048,title:'Elisabete I',poster_path:'/tElnmtQ6yz1PjN1kePNl8yMSb59.jpg',release_date:'2024-05-31',vote_average:6.4,overview:'A ascensão e reinado de uma das rainhas mais icônicas da história.'},
+  {id:762509,title:'Mufasa: O Rei Leão',poster_path:'/lurEK87kukWNaHd0zYnsi3yzJrs.jpg',release_date:'2024-12-20',vote_average:7.4,overview:'A origem de Mufasa, antes de se tornar o grande rei das terras do sol.'},
+  {id:558449,title:'Gladiador II',poster_path:'/2cxhvwyE2RlqNYNewb1xzrKqSlf.jpg',release_date:'2024-11-13',vote_average:6.8,overview:'Lúcio busca vingança e poder em Roma após uma vida marcada pela guerra.'},
+  {id:1034541,title:'Terrifier 3',poster_path:'/l1175hgL5DoXnqeZQCcU3eU1LKC.jpg',release_date:'2024-10-09',vote_average:7.2,overview:'Art, o palhaço, volta para semear o terror na véspera de Natal.'},
+  {id:1260386,title:'Wicked',poster_path:'/xDGbZ0JJ3mYaGKy4Nzd9Kph6ex9.jpg',release_date:'2024-11-20',vote_average:7.7,overview:'A improvável amizade entre Elphaba e Glinda antes de se tornarem rivais mágicas.'},
+  {id:889737,title:'Coringa: Delírio a Dois',poster_path:'/b3mdmjYTEL70j7nuXATUAD9qgu4.jpg',release_date:'2024-10-04',vote_average:5.2,overview:'Arthur Fleck enfrenta seu julgamento enquanto encontra alguém que compartilha sua loucura.'},
+];
+
+const FALLBACK_SERIES = [
+  {id:202555,name:'Adolescence',poster_path:'/b4bEFDTKJoIQDc7UPIpZcwfNNK1.jpg',first_air_date:'2025-03-13',vote_average:8.9,overview:'Um jovem de 13 anos é preso sob suspeita de assassinato. Sua família tenta entender o que aconteceu.'},
+  {id:100088,name:'The Last of Us',poster_path:'/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg',first_air_date:'2023-01-15',vote_average:8.6,overview:'Joel e Ellie cruzam uma América devastada por uma infecção fúngica.'},
+  {id:94997,name:'House of the Dragon',poster_path:'/z2yahl2uefxDCl0nogcRBstwruJ.jpg',first_air_date:'2022-08-21',vote_average:8.4,overview:'A guerra civil da Casa Targaryen décadas antes dos eventos de Game of Thrones.'},
+  {id:202556,name:'Andor',poster_path:'/59SVNwLfoMnZPPB6ukW6dlPxAdI.jpg',first_air_date:'2022-09-21',vote_average:8.4,overview:'A origem de Cassian Andor e a formação da Aliança Rebelde.'},
+  {id:84773,name:'The Lord of the Rings: The Rings of Power',poster_path:'/mYLOqiStMxDK3fYZFirgrMt8z5d.jpg',first_air_date:'2022-09-01',vote_average:7.3,overview:'A Segunda Era da Terra-Média e a forja dos anéis do poder.'},
+  {id:114461,name:'Fallout',poster_path:'/AnsSKR8YKZPLMSbh3YNSuMRKYpk.jpg',first_air_date:'2024-04-11',vote_average:8.5,overview:'Moradores de bunkers emergem 200 anos após uma guerra nuclear.'},
+  {id:126308,name:'Shōgun',poster_path:'/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg',first_air_date:'2024-02-27',vote_average:8.6,overview:'Um navegador inglês preso nas guerras de poder dos samurais japoneses.'},
+  {id:60735,name:'The Flash',poster_path:'/lJA2RCMfsWoskqlQhXPSLFQGXEJ.jpg',first_air_date:'2014-10-07',vote_average:7.8,overview:'Barry Allen usa seus poderes de super-velocidade para proteger Central City.'},
+  {id:1396,name:'Breaking Bad',poster_path:'/ggFHVNu6YYI5L9pCfOacjizRGt.jpg',first_air_date:'2008-01-20',vote_average:9.5,overview:'Um professor de química se torna um poderoso fabricante de metanfetamina.'},
+  {id:1399,name:'Game of Thrones',poster_path:'/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg',first_air_date:'2011-04-17',vote_average:9.3,overview:'Nobres famílias lutam pelo Trono de Ferro enquanto uma ameaça sobrenatural avança.'},
+  {id:66732,name:'Stranger Things',poster_path:'/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',first_air_date:'2016-07-15',vote_average:8.7,overview:'Um grupo de amigos enfrenta forças sobrenaturais em Hawkins, Indiana.'},
+  {id:87108,name:'Chernobyl',poster_path:'/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg',first_air_date:'2019-05-06',vote_average:9.3,overview:'A história real do acidente nuclear de Chernobyl em 1986.'},
+  {id:63333,name:'The Bear',poster_path:'/sHFlbKS3WLqMnp9t2ghADIJFnuQ.jpg',first_air_date:'2022-06-23',vote_average:8.7,overview:'Um chef renomado retorna para administrar o restaurante da família em Chicago.'},
+  {id:202374,name:'Silo',poster_path:'/pMsLsLLvFjkGBHLFtXbNGXBe8y.jpg',first_air_date:'2023-05-05',vote_average:8.1,overview:'Milhares de pessoas vivem num silo subterrâneo, sem saber a verdade sobre o mundo exterior.'},
+  {id:210028,name:'The Penguin',poster_path:'/lt2oqXvGEhU6UBMPnFCtMfRFwxg.jpg',first_air_date:'2024-09-19',vote_average:8.5,overview:'Oz Cobb ascende ao poder no submundo criminoso de Gotham.'},
+  {id:222765,name:'Duna: Profecia',poster_path:'/bene6BJ2Gl2Zx4hLqyRCOm6gPSB.jpg',first_air_date:'2024-11-15',vote_average:7.2,overview:'10.000 anos antes de Paul Atreides, irmãs Bene Gesserit lutam para proteger o universo.'},
+  {id:210073,name:'Agatha All Along',poster_path:'/8UvuUF4Wa7KX7cGMLmxWOFDFMHh.jpg',first_air_date:'2024-09-18',vote_average:7.4,overview:'A bruxa Agatha Harkness recruta um grupo improvável para percorrer a Estrada das Bruxas.'},
+  {id:202250,name:'3 Corpo',poster_path:'/qvdRCIFdFUBBNe8DWdBlUczFUBF.jpg',first_air_date:'2024-03-21',vote_average:7.4,overview:'Cientistas descobrem que a Terra está na mira de uma civilização alienígena.'},
+  {id:119051,name:'Wednesday',poster_path:'/9PFonBhy4cQy7Jz20NpMygczOkv.jpg',first_air_date:'2022-11-23',vote_average:8.1,overview:'Wednesday Addams tenta desvendar uma série de mistérios sobrenaturais na Academia Nevermore.'},
+  {id:93405,name:'Squid Game',poster_path:'/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg',first_air_date:'2021-09-17',vote_average:7.8,overview:'Pessoas endividadas competem em jogos infantis mortais por um enorme prêmio em dinheiro.'},
+];
+
+async function fetchCatalog() {
+  // 1) Já tem catálogo — usa direto, sem fetch
+  if (catalog.movies.length > 0 && catalog.series.length > 0) {
+    updateDashboard();
+    return;
+  }
+
+  // 2) Detecta se está rodando em servidor HTTP (não file://)
+  const isHttp = location.protocol === 'http:' || location.protocol === 'https:';
+
+  if (isHttp) {
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 6000);
+      const sig = { signal: controller.signal };
+      const [mp, mt, sp, st] = await Promise.all([
+        fetch(`${TMDB_BASE}/movie/popular?api_key=${TMDB_KEY}&language=pt-BR&page=1`, sig).then(r=>r.json()),
+        fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_KEY}&language=pt-BR&page=1`, sig).then(r=>r.json()),
+        fetch(`${TMDB_BASE}/tv/popular?api_key=${TMDB_KEY}&language=pt-BR&page=1`, sig).then(r=>r.json()),
+        fetch(`${TMDB_BASE}/tv/top_rated?api_key=${TMDB_KEY}&language=pt-BR&page=1`, sig).then(r=>r.json()),
+      ]);
+      clearTimeout(tid);
+      const movieSet = new Map();
+      [...(mp.results||[]), ...(mt.results||[])].forEach(m => { if (!movieSet.has(m.id)) movieSet.set(m.id, m); });
+      const seriesSet = new Map();
+      [...(sp.results||[]), ...(st.results||[])].forEach(s => { if (!seriesSet.has(s.id)) seriesSet.set(s.id, s); });
+      catalog.movies = [...movieSet.values()].slice(0, 40);
+      catalog.series = [...seriesSet.values()].slice(0, 40);
+      save();
+      toast('✓ Catálogo TMDB carregado', '#46d369');
+      updateDashboard();
+      return;
+    } catch { /* cai no fallback abaixo */ }
+  }
+
+  // 3) Fallback local — sempre funciona (file://, offline, CORS bloqueado)
+  if (catalog.movies.length === 0) catalog.movies = FALLBACK_MOVIES;
+  if (catalog.series.length === 0) catalog.series = FALLBACK_SERIES;
+  save();
+  toast('📦 Catálogo local carregado', '#4a9eff');
+  updateDashboard();
+}
+
+/* ══════════════════════════════
+   DASHBOARD
+══════════════════════════════ */
+function updateDashboard() {
+  const totalU   = users.length;
+  const activeU  = users.filter(u=>u.status==='ativo').length;
+  const bMovies  = Object.values(blocked.movies||{}).filter(Boolean).length;
+  const bSeries  = Object.values(blocked.series||{}).filter(Boolean).length;
+  const fMovies  = catalog.movies.length - bMovies;
+  const fSeries  = catalog.series.length - bSeries;
+
+  $('stat-users').textContent         = totalU;
+  $('stat-users-active').textContent  = `${activeU} ativo${activeU!==1?'s':''}`;
+  $('stat-movies').textContent        = Math.max(0, fMovies);
+  $('stat-movies-blocked').textContent= `${bMovies} bloqueado${bMovies!==1?'s':''}`;
+  $('stat-series').textContent        = Math.max(0, fSeries);
+  $('stat-series-blocked').textContent= `${bSeries} bloqueada${bSeries!==1?'s':''}`;
+  $('stat-total').textContent         = catalog.movies.length + catalog.series.length;
+  $('badge-users').textContent        = totalU;
+
+  renderDashLogs();
+}
+
+function renderDashLogs() {
+  const el = $('dash-log-list');
+  const recent = logs.slice(0,8);
+  if (!recent.length) { el.innerHTML='<p style="font-size:.82rem;color:var(--dim);padding:8px 0">Nenhuma atividade registrada.</p>'; return; }
+  el.innerHTML = recent.map(l => `
+    <div class="log-item">
+      <div class="log-dot log-dot-${l.type}"></div>
+      <div>
+        <div class="log-text">${escHtml(l.msg)}</div>
+        <div class="log-time">${escHtml(l.time)}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════
+   USUÁRIOS
+══════════════════════════════ */
+function renderUsers(list) {
+  const data = list !== undefined ? list : users;
+  const tbody = $('users-tbody');
+  $('users-empty').style.display = data.length ? 'none' : 'block';
+  if (!data.length) { tbody.innerHTML=''; return; }
+  tbody.innerHTML = data.map(u => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="avatar-sm">${escHtml(u.name.charAt(0).toUpperCase())}</div>
+          <span style="font-weight:600">${escHtml(u.name)}</span>
+        </div>
+      </td>
+      <td class="td-mono">${escHtml(u.email)}</td>
+      <td><span class="td-mono" style="background:rgba(255,255,255,.05);padding:3px 8px;border-radius:3px;font-size:.72rem">${escHtml(u.password)}</span></td>
+      <td><span class="badge ${u.status==='ativo'?'badge-green':'badge-red'}">${escHtml(u.status)}</span></td>
+      <td class="td-mono" style="color:var(--dim)">${escHtml(u.created||'-')}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-secondary btn-xs" onclick="editUser('${u.id}')">Editar</button>
+          <button class="btn btn-danger btn-xs" onclick="confirmDelete('${u.id}')">Remover</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterUsers() {
+  const q    = ($('user-search').value||'').toLowerCase();
+  const stat = $('user-filter-status').value;
+  const filtered = users.filter(u => {
+    const matchQ   = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchSt  = !stat || u.status === stat;
+    return matchQ && matchSt;
+  });
+  renderUsers(filtered);
+}
+
+function openAddUser() {
+  $('modal-user-title').textContent = 'Novo Usuário';
+  $('user-edit-id').value = '';
+  $('user-name').value = '';
+  $('user-email').value = '';
+  $('user-pwd').value = '';
+  $('user-note').value = '';
+  $('user-status').value = 'ativo';
+  openModal('modal-user');
+}
+
+function editUser(id) {
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  $('modal-user-title').textContent = 'Editar Usuário';
+  $('user-edit-id').value  = u.id;
+  $('user-name').value     = u.name;
+  $('user-email').value    = u.email;
+  $('user-pwd').value      = u.password;
+  $('user-note').value     = u.note || '';
+  $('user-status').value   = u.status;
+  openModal('modal-user');
+}
+
+function saveUser() {
+  const id     = $('user-edit-id').value;
+  const name   = $('user-name').value.trim();
+  const email  = $('user-email').value.trim();
+  const pwd    = $('user-pwd').value.trim();
+  const note   = $('user-note').value.trim();
+  const status = $('user-status').value;
+
+  if (!name)  { toast('⚠ Informe o nome.', '#f5a623'); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('⚠ E-mail inválido.', '#f5a623'); return; }
+  if (!pwd || pwd.length < 6) { toast('⚠ Senha deve ter ao menos 6 caracteres.', '#f5a623'); return; }
+
+  if (id) {
+    const idx = users.findIndex(u => u.id === id);
+    if (idx > -1) {
+      users[idx] = { ...users[idx], name, email, password: pwd, note, status };
+      addLog('blue', `Usuário editado: ${name} (${email})`);
+      toast('✓ Usuário atualizado');
+    }
+  } else {
+    // Verifica e-mail duplicado
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      toast('⚠ E-mail já cadastrado.', '#f5a623'); return;
+    }
+    const newUser = {
+      id: 'u_' + Date.now(),
+      name, email, password: pwd, note, status,
+      created: new Date().toLocaleDateString('pt-BR')
+    };
+    users.push(newUser);
+    addLog('green', `Novo usuário criado: ${name} (${email})`);
+    toast('✓ Usuário criado');
+  }
+  save();
+  closeModal('modal-user');
+  renderUsers();
+  updateDashboard();
+}
+
+function confirmDelete(id) {
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  $('confirm-title').textContent = 'Remover Usuário';
+  $('confirm-msg').textContent   = `Tem certeza que deseja remover "${u.name}" (${u.email})? Esta ação não pode ser desfeita.`;
+  $('confirm-ok').onclick = () => {
+    users = users.filter(x => x.id !== id);
+    addLog('red', `Usuário removido: ${u.name} (${u.email})`);
+    save();
+    renderUsers();
+    updateDashboard();
+    closeModal('modal-confirm');
+    toast('✓ Usuário removido');
+  };
+  openModal('modal-confirm');
+}
+
+/* ══════════════════════════════
+   CATÁLOGO
+══════════════════════════════ */
+function isBlocked(type, id) {
+  return !!(blocked[type] && blocked[type][id]);
+}
+
+function toggleBlock(type, id, title) {
+  if (!blocked[type]) blocked[type] = {};
+  const willBlock = !blocked[type][id];
+  blocked[type][id] = willBlock;
+  if (!willBlock) delete blocked[type][id];
+  addLog(willBlock ? 'red' : 'green',
+    `${willBlock ? '🔒 Bloqueado' : '✅ Liberado'}: "${title}"`);
+  save();
+  renderContent(type === 'movies' ? 'movies' : 'series');
+  updateDashboard();
+}
+
+function toggleAllContent(type, allow) {
+  const items = type === 'movies' ? catalog.movies : catalog.series;
+  if (!blocked[type]) blocked[type] = {};
+  items.forEach(item => {
+    if (allow) {
+      delete blocked[type][item.id];
+    } else {
+      blocked[type][item.id] = true;
+    }
+  });
+  addLog(allow ? 'green' : 'red',
+    `${allow ? '✅ Todos liberados' : '🔒 Todos bloqueados'}: ${type}`);
+  save();
+  renderContent(type);
+  updateDashboard();
+  toast(allow ? '✓ Todos liberados' : '✓ Todos bloqueados');
+}
+
+function renderContent(type) {
+  const isMovies = type === 'movies';
+  const items  = isMovies ? catalog.movies : catalog.series;
+  const gridId = isMovies ? 'movies-grid' : 'series-grid';
+  const searchId = isMovies ? 'movie-search' : 'series-search';
+  const filterId = isMovies ? 'movie-filter' : 'series-filter';
+  const emptyId  = isMovies ? 'movies-empty' : 'series-empty';
+
+  const q   = ($(searchId)?.value || '').toLowerCase();
+  const fil = $(filterId)?.value || '';
+
+  const filtered = items.filter(item => {
+    const title = (item.title || item.name || '').toLowerCase();
+    const matchQ = !q || title.includes(q);
+    const bl = isBlocked(type, item.id);
+    const matchF = !fil || (fil==='bloqueado' ? bl : !bl);
+    return matchQ && matchF;
+  });
+
+  const grid = $(gridId);
+  $(emptyId).style.display = filtered.length ? 'none' : 'block';
+
+  if (!filtered.length) { grid.innerHTML = ''; return; }
+
+  grid.innerHTML = filtered.map(item => {
+    const title = escHtml(item.title || item.name || '');
+    const year  = (item.release_date || item.first_air_date || '').slice(0,4);
+    const poster = item.poster_path ? `${IMG_BASE}${item.poster_path}` : '';
+    const bl = isBlocked(type, item.id);
+    return `
+      <div class="content-card">
+        <div class="cc-thumb">
+          ${poster
+            ? `<img src="${poster}" alt="${title}" loading="lazy" onerror="this.style.display='none'">`
+            : `<span style="font-size:2.5rem">${isMovies?'🎬':'📺'}</span>`}
+          ${bl ? `<div class="cc-blocked"><div class="cc-blocked-icon">🔒</div></div>` : ''}
+          <div class="cc-toggle">
+            <label class="toggle" title="${bl?'Liberar':'Bloquear'}">
+              <input type="checkbox" ${bl?'':'checked'} onchange="toggleBlock('${type}', ${item.id}, '${title.replace(/'/g,"\\'")}')">
+              <div class="toggle-slider"></div>
+            </label>
+          </div>
+        </div>
+        <div class="cc-info">
+          <div class="cc-title">${title}</div>
+          <div class="cc-meta">${year} · <span style="color:${bl?'var(--red)':'var(--green)'}">${bl?'Bloqueado':'Liberado'}</span></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterContent(type) {
+  renderContent(type);
+}
+
+/* ══════════════════════════════
+   CREDENCIAIS
+══════════════════════════════ */
+function loadCredFields() {
+  $('cred-admin-email').value = adminCreds.email;
+  $('cred-admin-pwd').value   = '';
+  $('cred-admin-pwd2').value  = '';
+}
+
+function saveAdminCredentials() {
+  const email = $('cred-admin-email').value.trim();
+  const pwd   = $('cred-admin-pwd').value;
+  const pwd2  = $('cred-admin-pwd2').value;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('⚠ E-mail inválido.', '#f5a623'); return; }
+  if (pwd && pwd !== pwd2) { toast('⚠ Senhas não coincidem.', '#f5a623'); return; }
+  adminCreds.email = email;
+  if (pwd) adminCreds.password = pwd;
+  save();
+  addLog('blue', `Credenciais admin atualizadas`);
+  toast('✓ Credenciais salvas');
+}
+
+function generateAppCode() {
+  const email = $('cred-app-email').value.trim();
+  const pwd   = $('cred-app-pwd').value.trim();
+  if (!email || !pwd) { toast('⚠ Preencha e-mail e senha.', '#f5a623'); return; }
+  const code = `const AUTH_EMAIL    = '${email}';\nconst AUTH_PASSWORD = '${pwd}';`;
+  $('gen-code').textContent = code;
+  $('gen-code-out').style.display = 'block';
+  addLog('blue', `Código gerado para app: ${email}`);
+}
+
+function copyGenCode() {
+  const code = $('gen-code').textContent;
+  navigator.clipboard.writeText(code).then(() => toast('✓ Copiado!')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('✓ Copiado!');
+  });
+}
+
+/* ══════════════════════════════
+   LOGS
+══════════════════════════════ */
+function renderLogs() {
+  const el = $('full-log-list');
+  if (!logs.length) {
+    el.innerHTML='<p style="font-size:.82rem;color:var(--dim);padding:16px 20px">Nenhuma atividade registrada.</p>';
+    return;
+  }
+  el.innerHTML = logs.map(l => `
+    <div class="log-item" style="padding:10px 20px">
+      <div class="log-dot log-dot-${l.type}"></div>
+      <div>
+        <div class="log-text">${escHtml(l.msg)}</div>
+        <div class="log-time">${escHtml(l.time)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clearLogs() {
+  logs = [];
+  save();
+  renderLogs();
+  toast('✓ Logs limpos');
+}
+
+/* ══════════════════════════════
+   MODAL
+══════════════════════════════ */
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+
+/* ══════════════════════════════
+   UTILS
+══════════════════════════════ */
+function escHtml(str) {
+  const d = document.createElement('span');
+  d.textContent = String(str||'');
+  return d.innerHTML;
+}
+
+/* ══ INIT ══ */
+load();
+// Pré-preenche email admin no login
+if (adminCreds.email) $('adm-email').value = adminCreds.email;
+</script>
+</body>
+</html>
